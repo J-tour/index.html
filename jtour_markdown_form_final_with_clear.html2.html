@@ -1,0 +1,238 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>Jtour 表演紀錄 ➜ Markdown 產生器</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; max-width: 800px; }
+        label { display: block; margin-top: 1em; font-weight: bold; }
+        textarea, input[type="text"], input[type="number"] { width: 100%; padding: 0.5em; }
+        button { margin-top: 1em; padding: 0.5em 1em; font-size: 1em; }
+        pre { background: #f4f4f4; padding: 1em; white-space: pre-wrap; }
+        .tag-buttons { margin: 0.5em 0; }
+        .tag-buttons button {
+            margin: 0.2em; padding: 0.3em 0.6em;
+            border: none; background: #eee; cursor: pointer;
+            border-radius: 5px;
+        }
+        .tag-buttons button:hover {
+            background: #cce;
+        }
+        ul { padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>🎤 Jtour 接投表演紀錄 ➜ Markdown 產生器</h1>
+
+    <label>📍 地點 Place</label>
+    <div class="tag-buttons">
+        <button type="button" onclick="setValue('place','乙未公園')">乙未公園</button>
+        <button type="button" onclick="setValue('place','新勢公園')">新勢公園</button>
+        <button type="button" onclick="setValue('place','中壢大時鐘')">中壢大時鐘</button>
+        <button type="button" onclick="setValue('place','(名稱)商業演出')">(名稱)商業演出</button>
+    </div>
+    <input type="text" id="place">
+
+    <label>🗓️ 日期 Date</label>
+    <input type="text" id="date" placeholder="YYYY-MM-DD">
+
+    <label>🕒 時間 Time</label>
+    <input type="text" id="time" placeholder="13:00 ~ 17:00">
+
+    <label>🎸 演出人員 Performers</label>
+    <div class="tag-buttons">
+        <button type="button" onclick="addPerformer('👨‍🦲Dipsy Koo')">👨‍🦲Dipsy Koo</button>
+        <button type="button" onclick="addPerformer('🦖Sean')">🦖Sean</button>
+        <button type="button" onclick="addPerformer('💩忻妍')">💩忻妍</button>
+        <button type="button" onclick="addPerformer('🐷家齊')">🐷家齊</button>
+        <button type="button" onclick="addPerformer('🚬麒安')">🚬麒安</button>
+        <button type="button" onclick="addPerformer('🚬昊昊')">🚬昊昊</button>
+    </div>
+    <input type="text" id="performers" placeholder="可手動補充，使用逗號分隔">
+
+    <label>🎙️ Featuring (ft.)</label>
+    <input type="text" id="featuring" placeholder="例如：Joanna、小志">
+
+    <label>🌤️ 天氣 Weather</label>
+    <div class="tag-buttons">
+        <button type="button" onclick="setValue('weather','🌤️晴天')">🌤️晴天</button>
+        <button type="button" onclick="setValue('weather','🌦️陰天')">🌦️陰天</button>
+        <button type="button" onclick="setValue('weather','🌨️小雨')">🌨️小雨</button>
+        <button type="button" onclick="setValue('weather','⛈️暴雨')">⛈️暴雨</button>
+    </div>
+    <input type="text" id="weather">
+
+    <label>🧰 使用設備 | Gear</label>
+    <div class="tag-buttons">
+        <button onclick="selectGear('🔉Bose音響')" type="button">🔉Bose音響</button>
+        <button onclick="selectGear('麥架')" type="button">麥架</button>
+        <button onclick="selectGear('🎤麥克風')" type="button">🎤麥克風</button>
+        <button onclick="selectGear('〽️XLR導線')" type="button">〽️XLR導線</button>
+        <button onclick="selectGear('➰6.3mm導線')" type="button">➰6.3mm導線</button>
+        <button onclick="selectGear('綜合吉他架')" type="button">綜合吉他架</button>
+        <button onclick="selectGear('手機架')" type="button">手機架</button>
+        <button onclick="selectGear('🎛️Mixer')" type="button">🎛️Mixer</button>
+        <button onclick="selectGear('🎸吉他')" type="button">🎸吉他</button>
+        <button onclick="selectGear('🎸貝斯')" type="button">🎸貝斯</button>
+        <button onclick="selectGear('🎹鋼琴')" type="button">🎹鋼琴</button>
+        <button onclick="selectGear('🥁木箱鼓')" type="button">🥁木箱鼓</button>
+    </div>
+    <input type="text" id="gearSelected" placeholder="目前選擇項目" readonly>
+    <label>數量：</label>
+    <input type="number" id="gearQty" min="1" value="1">
+    <button onclick="addGear()">➕ 新增器材</button>
+    <button onclick="clearGearList()" type="button" style="margin-left: 0.5em; background: #fcc;">🗑️ 清除器材清單</button>
+<ul id="gearList"></ul>
+
+    <label>🎵 歌單 Song List</label>
+    <textarea id="songs" rows="4" placeholder="1. 小情歌 - 忻妍&#10;2. Love Yourself - Sean"></textarea>
+
+    <label>⚠️ 當日狀況 Notes</label>
+    <textarea id="incidents" rows="3"></textarea>
+
+    <label>💰 收益 Earnings</label>
+    <input type="number" id="cash" placeholder="現金收入">
+    <input type="number" id="online" placeholder="線上轉帳">
+    <input type="number" id="invoice" placeholder="發票張數">
+    <input type="number" id="expense" placeholder="支出 (負數)">
+    <p><strong>總計 Total：</strong><span id="total">0</span> NTD</p>
+
+    <button onclick="generate()">產生 Markdown</button>
+    <button onclick="copyMarkdown()">📋 複製 Markdown</button>
+    <h2>📝 產生結果：</h2>
+    <pre id="result"></pre>
+
+    <script>
+        let gearItems = [];
+
+        function setValue(id, value) {
+            document.getElementById(id).value = value;
+        }
+
+        function addPerformer(name) {
+            const field = document.getElementById("performers");
+            const current = field.value.trim();
+            const names = current ? current.split(",").map(x => x.trim()) : [];
+            if (!names.includes(name)) {
+                names.push(name);
+                field.value = names.join(", ");
+            }
+        }
+
+        function selectGear(name) {
+            document.getElementById("gearSelected").value = name;
+        }
+
+        function addGear() {
+            const name = document.getElementById("gearSelected").value;
+            const qty = document.getElementById("gearQty").value;
+            if (name && qty > 0) {
+                gearItems.push(`${name} x${qty}`);
+                updateGearList();
+                document.getElementById("gearSelected").value = '';
+                document.getElementById("gearQty").value = 1;
+            }
+        }
+
+        function updateGearList() {
+            const ul = document.getElementById("gearList");
+            ul.innerHTML = '';
+            gearItems.forEach(item => {
+                const li = document.createElement("li");
+                li.textContent = item;
+                ul.appendChild(li);
+            });
+        }
+
+        function generate() {
+            const invoice = parseInt(document.getElementById("invoice").value) || 0;
+            const cash = parseInt(document.getElementById("cash").value) || 0;
+            const online = parseInt(document.getElementById("online").value) || 0;
+            const expense = parseInt(document.getElementById("expense").value) || 0;
+            const total = cash + online - expense;
+            document.getElementById("total").textContent = total;
+
+            const md = `# 🎤 Jtour接投 現場演出記錄
+
+
+
+### 📍 ${place.value} | 🗓️ ${date.value} | 🕒 ${time.value} |  ${weather.value}
+
+
+## 🎸 演出人員 | Performers
+
+| **成員** | **成員** | **Feat.** |
+|:------:|:------:|:-------:|
+${(() => {
+  const names = performers.value.split(',').map(p => p.trim());
+  const feats = featuring.value.split(',').map(f => f.trim());
+  const maxRows = Math.max(
+    Math.ceil(names.length / 2),
+    feats.length
+  );
+
+  const rows = [];
+
+  for (let i = 0; i < maxRows; i++) {
+    const left = names[i * 2] || '';
+    const right = names[i * 2 + 1] || '';
+    const feat = feats[i] || '';
+    rows.push(`| ${left} | ${right} | ${feat} |`);
+  }
+
+  return rows.join('\n');
+})()}
+
+
+## 🧰 使用設備 | Gear
+
+| **器材** | **器材** |
+|:------:|:------:|
+${gearItems.reduce((rows, item, idx) => {
+  const col = ` ${item} `;
+  if (idx % 2 === 0) {
+    rows.push([col]);
+  } else {
+    rows[rows.length - 1].push(col);
+  }
+  return rows;
+}, []).map(row => `|${row[0]}|${row[1] || ''}|`).join('\n')}
+
+## 🎵 演出歌單 | Song List
+${songs.value}
+
+## ⚠️ 當日狀況 | Notes
+${incidents.value}
+
+## 💰 收益紀錄 | Earnings
+
+| **項目**       | **金額 (NTD)** |
+|:------------:|:-------------:|
+|     現金     |    ${cash}    |
+|   線上轉帳   |    ${online}  |
+|   發票   |    ${invoice}張 |
+|     支出     |    ${expense} |
+|   **總計**   |   **${total}**  |
+
+
+`;
+            document.getElementById("result").textContent = md;
+        }
+    
+function clearGearList() {
+    gearItems = [];
+    updateGearList();
+}
+
+function copyMarkdown() {
+    const markdown = document.getElementById("result").textContent;
+    navigator.clipboard.writeText(markdown)
+        .then(() => alert("✅ 已複製 Markdown 到剪貼簿！"))
+        .catch(err => alert("❌ 複製失敗：" + err));
+}
+
+</script>
+
+</body>
+</html>
